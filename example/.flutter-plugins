@@ -1,6 +1,6 @@
 # This is a generated file; do not edit or check into version control.
 camera=/Users/lpt-799/Code/custom-package/camera-0.10.5+5/
-camera_android=/Users/lpt-799/Code/custom-package/camera-0.10.5+5/camera_android-0.10.8+13/
+camera_android=/Users/lpt-799/.pub-cache/git/camera_android-c882efa3fbf0655ce4df8ac08f72b18be0550683/
 camera_avfoundation=/Users/lpt-799/.pub-cache/hosted/pub.dev/camera_avfoundation-0.9.13+7/
 camera_web=/Users/lpt-799/.pub-cache/hosted/pub.dev/camera_web-0.3.2+2/
 flutter_plugin_android_lifecycle=/Users/lpt-799/.pub-cache/hosted/pub.dev/flutter_plugin_android_lifecycle-2.0.17/

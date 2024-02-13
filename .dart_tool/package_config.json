@@ -51,7 +51,7 @@
     },
     {
       "name": "camera_android",
-      "rootUri": "../camera_android-0.10.8+13",
+      "rootUri": "file:///Users/lpt-799/.pub-cache/git/camera_android-c882efa3fbf0655ce4df8ac08f72b18be0550683/",
       "packageUri": "lib/",
       "languageVersion": "2.19"
     },
@@ -362,7 +362,7 @@
       "languageVersion": "2.19"
     }
   ],
-  "generated": "2024-02-13T01:11:54.439621Z",
+  "generated": "2024-02-13T01:30:15.996504Z",
   "generator": "pub",
   "generatorVersion": "2.19.4"
 }
