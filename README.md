@@ -1,169 +1,52 @@
 # Camera Plugin
 
-<?code-excerpt path-base="example/lib"?>
+Camera package with custom `camera_android` that fix crash issues.
 
-[![pub package](https://img.shields.io/pub/v/camera.svg)](https://pub.dev/packages/camera)
+## Only On Android
 
-A Flutter plugin for iOS, Android and Web allowing access to the device cameras.
+    ````
+    Thread Name: 'CameraBackground'
+    Back traces starts.
+    java.lang.NullPointerException: Attempt to invoke virtual method 'void android.hardware.camera2.CameraCaptureSession.close()' on a null object reference
+    at io.flutter.plugins.camera.Camera.closeCaptureSession(Camera.java:1228)
+    at io.flutter.plugins.camera.Camera$1.onClosed(Camera.java:348)
+    at android.hardware.camera2.impl.CameraDeviceImpl$5.run(CameraDeviceImpl.java:252)
+    at android.os.Handler.handleCallback(Handler.java:942)
+    at android.os.Handler.dispatchMessage(Handler.java:99)
+    at android.os.Looper.loopOnce(Looper.java:223)
+    at android.os.Looper.loop(Looper.java:324)
+    at android.os.HandlerThread.run(HandlerThread.java:67)
+    Back traces ends.
+    ````
 
-|                | Android | iOS       | Web                    |
-|----------------|---------|-----------|------------------------|
-| **Support**    | SDK 21+ | iOS 11.0+ | [See `camera_web `][1] |
+### Issue
 
-## Features
+    https://github.com/flutter/flutter/issues/114012
 
-* Display live camera preview in a widget.
-* Snapshots can be captured and saved to a file.
-* Record video.
-* Add access to the image stream from Dart.
+### Occasionally reproduce this crash:
 
-## Installation
+Continuously enter and exit the camera page, crash occurs between the 100th and 300th time.
 
-First, add `camera` as a [dependency in your pubspec.yaml file](https://flutter.dev/using-packages/).
+### 100% Re-Produce the issue steps:
 
-### iOS
+1. Set two breakpoints in `io.flutter.plugins.camera.Camera` [Camera.java](https://github.com/flutter/packages/blob/camera_android-v0.10.8%252B5/packages/camera/camera_android/android/src/main/java/io/flutter/plugins/camera/Camera.java) :
+   - breakpoint 1: [Line 1228](https://github.com/flutter/packages/blob/867f2a4c929a0afe881ca4277f27d260952f4fb2/packages/camera/camera_android/android/src/main/java/io/flutter/plugins/camera/Camera.java#L1228) `captureSession.close();`
+   - breakpoint 2: [Line 1263](https://github.com/flutter/packages/blob/867f2a4c929a0afe881ca4277f27d260952f4fb2/packages/camera/camera_android/android/src/main/java/io/flutter/plugins/camera/Camera.java#L1263) `captureSession = null;`
+2. Push the camera view in then pop it out after the camera is working.
+3. Continue the thread from breakpoint 2 -> breakpoint 1, crash raised.
 
-Add two rows to the `ios/Runner/Info.plist`:
+### How-to fix:
 
-* one with the key `Privacy - Camera Usage Description` and a usage description.
-* and one with the key `Privacy - Microphone Usage Description` and a usage description.
+Just add `synchronized` key to this three close method
 
-If editing `Info.plist` as text, add:
+    synchronized void closeCaptureSession() {
+    // on Line 1224
+    ...
 
-```xml
-<key>NSCameraUsageDescription</key>
-<string>your usage description here</string>
-<key>NSMicrophoneUsageDescription</key>
-<string>your usage description here</string>
-```
+    synchronized public void close() {
+    // on Line 1233
+    ...
 
-### Android
-
-Change the minimum Android sdk version to 21 (or higher) in your `android/app/build.gradle` file.
-
-```groovy
-minSdkVersion 21
-```
-
-It's important to note that the `MediaRecorder` class is not working properly on emulators, as stated in the documentation: https://developer.android.com/reference/android/media/MediaRecorder. Specifically, when recording a video with sound enabled and trying to play it back, the duration won't be correct and you will only see the first frame.
-
-### Web integration
-
-For web integration details, see the
-[`camera_web` package](https://pub.dev/packages/camera_web).
-
-### Handling Lifecycle states
-
-As of version [0.5.0](https://github.com/flutter/packages/blob/main/packages/camera/CHANGELOG.md#050) of the camera plugin, lifecycle changes are no longer handled by the plugin. This means developers are now responsible to control camera resources when the lifecycle state is updated. Failure to do so might lead to unexpected behavior (for example as described in issue [#39109](https://github.com/flutter/flutter/issues/39109)). Handling lifecycle changes can be done by overriding the `didChangeAppLifecycleState` method like so:
-
-<?code-excerpt "main.dart (AppLifecycle)"?>
-```dart
-@override
-void didChangeAppLifecycleState(AppLifecycleState state) {
-  final CameraController? cameraController = controller;
-
-  // App state changed before we got the chance to initialize.
-  if (cameraController == null || !cameraController.value.isInitialized) {
-    return;
-  }
-
-  if (state == AppLifecycleState.inactive) {
-    cameraController.dispose();
-  } else if (state == AppLifecycleState.resumed) {
-    _initializeCameraController(cameraController.description);
-  }
-}
-```
-
-### Handling camera access permissions
-
-Permission errors may be thrown when initializing the camera controller, and you are expected to handle them properly.
-
-Here is a list of all permission error codes that can be thrown:
-
-- `CameraAccessDenied`: Thrown when user denies the camera access permission.
-
-- `CameraAccessDeniedWithoutPrompt`: iOS only for now. Thrown when user has previously denied the permission. iOS does not allow prompting alert dialog a second time. Users will have to go to Settings > Privacy > Camera in order to enable camera access.
-
-- `CameraAccessRestricted`: iOS only for now. Thrown when camera access is restricted and users cannot grant permission (parental control).
-
-- `AudioAccessDenied`: Thrown when user denies the audio access permission.
-
-- `AudioAccessDeniedWithoutPrompt`: iOS only for now. Thrown when user has previously denied the permission. iOS does not allow prompting alert dialog a second time. Users will have to go to Settings > Privacy > Microphone in order to enable audio access.
-
-- `AudioAccessRestricted`: iOS only for now. Thrown when audio access is restricted and users cannot grant permission (parental control).
-
-### Example
-
-Here is a small example flutter app displaying a full screen camera preview.
-
-<?code-excerpt "readme_full_example.dart (FullAppExample)"?>
-```dart
-import 'package:camera/camera.dart';
-import 'package:flutter/material.dart';
-
-late List<CameraDescription> _cameras;
-
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  _cameras = await availableCameras();
-  runApp(const CameraApp());
-}
-
-/// CameraApp is the Main Application.
-class CameraApp extends StatefulWidget {
-  /// Default Constructor
-  const CameraApp({super.key});
-
-  @override
-  State<CameraApp> createState() => _CameraAppState();
-}
-
-class _CameraAppState extends State<CameraApp> {
-  late CameraController controller;
-
-  @override
-  void initState() {
-    super.initState();
-    controller = CameraController(_cameras[0], ResolutionPreset.max);
-    controller.initialize().then((_) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {});
-    }).catchError((Object e) {
-      if (e is CameraException) {
-        switch (e.code) {
-          case 'CameraAccessDenied':
-            // Handle access errors here.
-            break;
-          default:
-            // Handle other errors here.
-            break;
-        }
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!controller.value.isInitialized) {
-      return Container();
-    }
-    return MaterialApp(
-      home: CameraPreview(controller),
-    );
-  }
-}
-```
-
-For a more elaborate usage example see [here](https://github.com/flutter/packages/tree/main/packages/camera/camera/example).
-
-[1]: https://pub.dev/packages/camera_web#limitations-on-the-web-platform
+    synchronized private void stopAndReleaseCamera() {
+    // on Line 1256
+    ...
