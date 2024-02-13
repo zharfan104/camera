@@ -86,32 +86,14 @@
       "languageVersion": "2.12"
     },
     {
-      "name": "camera",
-      "rootUri": "../../",
-      "packageUri": "lib/",
-      "languageVersion": "2.19"
-    },
-    {
       "name": "camera_android",
-      "rootUri": "../../camera_android-0.10.8+13",
-      "packageUri": "lib/",
-      "languageVersion": "2.19"
-    },
-    {
-      "name": "camera_avfoundation",
-      "rootUri": "file:///Users/lpt-799/.pub-cache/hosted/pub.dev/camera_avfoundation-0.9.13+7",
+      "rootUri": "../../",
       "packageUri": "lib/",
       "languageVersion": "2.19"
     },
     {
       "name": "camera_platform_interface",
       "rootUri": "file:///Users/lpt-799/.pub-cache/hosted/pub.dev/camera_platform_interface-2.6.0",
-      "packageUri": "lib/",
-      "languageVersion": "2.19"
-    },
-    {
-      "name": "camera_web",
-      "rootUri": "file:///Users/lpt-799/.pub-cache/hosted/pub.dev/camera_web-0.3.2+2",
       "packageUri": "lib/",
       "languageVersion": "2.19"
     },
@@ -578,7 +560,7 @@
       "languageVersion": "2.19"
     }
   ],
-  "generated": "2024-02-13T01:04:49.968137Z",
+  "generated": "2024-02-13T01:05:06.015237Z",
   "generator": "pub",
   "generatorVersion": "2.19.4"
 }
